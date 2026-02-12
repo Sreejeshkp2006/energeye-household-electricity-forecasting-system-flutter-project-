@@ -1,1 +1,1 @@
-# energeye-household-electricity-forecasting-system-flutter-project-
+# energeye-household electricity forecasting system-flutterproject
