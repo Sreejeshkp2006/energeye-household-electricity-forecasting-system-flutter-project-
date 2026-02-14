@@ -1,9 +1,10 @@
 class DeviceModel {
-  final String id; // 🔹 NEW (Firestore doc ID)
+  final String id;
   final String name;
   final double watt;
   final double hours;
   final double rate;
+  final int quantity;
   final double dailyUnit;
   final double dailyCost;
 
@@ -13,33 +14,47 @@ class DeviceModel {
     required this.watt,
     required this.hours,
     required this.rate,
+    required this.quantity,
     required this.dailyUnit,
     required this.dailyCost,
   });
 
-  // 🔹 EXISTING FUNCTION (unchanged logic)
   Map<String, dynamic> toMap() {
     return {
       'name': name,
       'watt': watt,
       'hours': hours,
       'rate': rate,
+      'quantity': quantity,
       'dailyUnit': dailyUnit,
       'dailyCost': dailyCost,
       'createdAt': DateTime.now(),
     };
   }
 
-  // 🔹 NEW (for Firestore read)
-  factory DeviceModel.fromFirestore(String id, Map<String, dynamic> map) {
+  factory DeviceModel.fromFirestore(
+    String id,
+    Map<String, dynamic> map,
+  ) {
     return DeviceModel(
       id: id,
-      name: map['name'],
-      watt: (map['watt'] as num).toDouble(),
-      hours: (map['hours'] as num).toDouble(),
-      rate: (map['rate'] as num).toDouble(),
-      dailyUnit: (map['dailyUnit'] as num).toDouble(),
-      dailyCost: (map['dailyCost'] as num).toDouble(),
+
+      name: map['name'] ?? '',
+
+      watt: map['watt'] != null ? (map['watt'] as num).toDouble() : 0.0,
+
+      hours: map['hours'] != null ? (map['hours'] as num).toDouble() : 0.0,
+
+      rate: map['rate'] != null ? (map['rate'] as num).toDouble() : 0.0,
+
+      // 🔥 SAFE QUANTITY (Old devices default = 1)
+      quantity: map['quantity'] != null ? (map['quantity'] as num).toInt() : 1,
+
+      dailyUnit:
+          map['dailyUnit'] != null ? (map['dailyUnit'] as num).toDouble() : 0.0,
+
+      dailyCost:
+          map['dailyCost'] != null ? (map['dailyCost'] as num).toDouble() : 0.0,
     );
   }
 }

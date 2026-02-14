@@ -4,85 +4,148 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../models/device_model.dart';
 
 class AddDeviceForm extends StatefulWidget {
-  final Function(DeviceModel) onAdd;
-  const AddDeviceForm({super.key, required this.onAdd});
+  const AddDeviceForm({super.key});
 
   @override
   State<AddDeviceForm> createState() => _AddDeviceFormState();
 }
 
 class _AddDeviceFormState extends State<AddDeviceForm> {
+  final _formKey = GlobalKey<FormState>();
+
   final nameController = TextEditingController();
   final wattController = TextEditingController();
-  final hourController = TextEditingController();
-  final rateController = TextEditingController(text: "7");
-
-  Future<void> saveDevice(DeviceModel device) async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-
-    await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .collection('devices')
-        .add(device.toMap());
-  }
+  final hoursController = TextEditingController();
+  final rateController = TextEditingController();
+  final quantityController = TextEditingController(); // 🔥 NEW
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Add Device")),
       body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(labelText: "Device Name"),
-            ),
-            TextField(
-              controller: wattController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: "Watt (W)"),
-            ),
-            TextField(
-              controller: hourController,
-              keyboardType: TextInputType.number,
-              decoration:
-                  const InputDecoration(labelText: "Daily Usage (hours)"),
-            ),
-            TextField(
-              controller: rateController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: "Rate (₹/kWh)"),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              child: const Text("ADD DEVICE"),
-              onPressed: () async {
-                final watt = double.parse(wattController.text);
-                final hours = double.parse(hourController.text);
-                final rate = double.parse(rateController.text);
+        padding: const EdgeInsets.all(20),
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                /// NAME
+                TextFormField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: "Device Name",
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) => value!.isEmpty ? "Enter name" : null,
+                ),
 
-                final dailyUnit = (watt * hours) / 1000;
-                final dailyCost = dailyUnit * rate;
+                const SizedBox(height: 15),
 
-                final device = DeviceModel(
-                  id: "", // 🔹 TEMP ID (Firestore gives real one)
-                  name: nameController.text.trim(),
-                  watt: watt,
-                  hours: hours,
-                  rate: rate,
-                  dailyUnit: dailyUnit,
-                  dailyCost: dailyCost,
-                );
+                /// WATT
+                TextFormField(
+                  controller: wattController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: "Power (Watt)",
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) => value!.isEmpty ? "Enter watt" : null,
+                ),
 
-                widget.onAdd(device); // existing logic
-                await saveDevice(device);
-                Navigator.pop(context);
-              },
+                const SizedBox(height: 15),
+
+                /// HOURS
+                TextFormField(
+                  controller: hoursController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: "Hours per Day",
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) => value!.isEmpty ? "Enter hours" : null,
+                ),
+
+                const SizedBox(height: 15),
+
+                /// RATE
+                TextFormField(
+                  controller: rateController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: "Electricity Rate (₹/kWh)",
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) => value!.isEmpty ? "Enter rate" : null,
+                ),
+
+                const SizedBox(height: 15),
+
+                /// QUANTITY 🔥
+                TextFormField(
+                  controller: quantityController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: "Quantity (Number of Devices)",
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) =>
+                      value!.isEmpty ? "Enter quantity" : null,
+                ),
+
+                const SizedBox(height: 25),
+
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      if (_formKey.currentState!.validate()) {
+                        final double watt = double.parse(wattController.text);
+
+                        final double hours = double.parse(hoursController.text);
+
+                        final double rate = double.parse(rateController.text);
+
+                        final int quantity = int.parse(quantityController.text);
+
+                        // 🔥 UPDATED CALCULATION
+                        final double dailyUnit =
+                            ((watt * hours) / 1000) * quantity;
+
+                        final double dailyCost = dailyUnit * rate;
+
+                        final user = FirebaseAuth.instance.currentUser;
+
+                        if (user == null) return;
+
+                        final docRef = FirebaseFirestore.instance
+                            .collection('users')
+                            .doc(user.uid)
+                            .collection('devices')
+                            .doc();
+
+                        final device = DeviceModel(
+                          id: docRef.id,
+                          name: nameController.text,
+                          watt: watt,
+                          hours: hours,
+                          rate: rate,
+                          quantity: quantity,
+                          dailyUnit: dailyUnit,
+                          dailyCost: dailyCost,
+                        );
+
+                        await docRef.set(device.toMap());
+
+                        Navigator.pop(context);
+                      }
+                    },
+                    child: const Text("Save Device"),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

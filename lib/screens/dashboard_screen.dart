@@ -1,268 +1,241 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
 import '../models/device_model.dart';
+import '../widgets/device_tile.dart';
+import '../widgets/summary_card.dart';
 import 'add_device_form.dart';
+import 'analysis_screen.dart';
+import 'monthly_prediction_screen.dart';
 import 'profile_screen.dart';
 
-class DashboardScreen extends StatefulWidget {
+class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
 
   @override
-  State<DashboardScreen> createState() => _DashboardScreenState();
-}
-
-class _DashboardScreenState extends State<DashboardScreen> {
-  final List<DeviceModel> devices = [];
-
-  // ===== EXISTING CALCULATIONS (UNCHANGED) =====
-  double get totalDailyCost => devices.fold(0, (sum, d) => sum + d.dailyCost);
-
-  double get totalDailyUnit => devices.fold(0, (sum, d) => sum + d.dailyUnit);
-
-  double get predictedMonthlyBill => totalDailyCost * 30;
-
-  @override
-  void initState() {
-    super.initState();
-    fetchDevices();
-  }
-
-  // ===== FIRESTORE LOAD (UNCHANGED LOGIC) =====
-  Future<void> fetchDevices() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-
-    final snapshot = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .collection('devices')
-        .get();
-
-    final loadedDevices = snapshot.docs
-        .map((doc) => DeviceModel.fromFirestore(doc.id, doc.data()))
-        .toList();
-
-    setState(() {
-      devices
-        ..clear()
-        ..addAll(loadedDevices);
-    });
-  }
-
-  // ===== DELETE FUNCTION (ADDED, SAFE) =====
-  Future<void> deleteDevice(DeviceModel device) async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-
-    await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .collection('devices')
-        .doc(device.id)
-        .delete();
-
-    setState(() {
-      devices.removeWhere((d) => d.id == device.id);
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Energy Dashboard"),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.person),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const ProfileScreen(),
-                ),
-              );
-            },
-          )
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        child: const Icon(Icons.add),
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => AddDeviceForm(
-                onAdd: (device) {
-                  setState(() => devices.add(device));
-                },
-              ),
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      return const Scaffold(
+        body: Center(child: Text("Not Logged In")),
+      );
+    }
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('devices')
+          .orderBy('createdAt', descending: true)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(),
             ),
           );
-        },
-      ),
-      body: devices.isEmpty
-          ? const Center(child: Text("No devices added"))
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ===== SUMMARY CARDS =====
-                  Row(
-                    children: [
-                      _summaryCard(
-                        title: "Daily kWh Used",
-                        value: "${totalDailyUnit.toStringAsFixed(2)} kWh",
-                        icon: Icons.flash_on,
-                      ),
-                      const SizedBox(width: 10),
-                      _summaryCard(
-                        title: "Daily Cost",
-                        value: "₹${totalDailyCost.toStringAsFixed(2)}",
-                        icon: Icons.currency_rupee,
-                      ),
-                    ],
-                  ),
+        }
 
-                  const SizedBox(height: 12),
+        final devices = snapshot.data!.docs
+            .map((doc) => DeviceModel.fromFirestore(
+                  doc.id,
+                  doc.data() as Map<String, dynamic>,
+                ))
+            .toList();
 
-                  // ===== MONTHLY PREDICTION =====
-                  Card(
-                    child: ListTile(
-                      leading: const Icon(Icons.trending_up),
-                      title: const Text("Predicted Monthly Bill"),
-                      subtitle: const Text("ML ready"),
-                      trailing: Text(
-                        "₹${predictedMonthlyBill.toStringAsFixed(0)}",
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+        final totalDailyUnit =
+            devices.fold(0.0, (total, d) => total + d.dailyUnit);
+
+        final totalDailyCost =
+            devices.fold(0.0, (total, d) => total + d.dailyCost);
+
+        final predictedMonthly = totalDailyCost * 30;
+
+        return Scaffold(
+          backgroundColor: const Color(0xFFF4F6FA),
+
+          appBar: AppBar(
+            title: const Text("Energy Dashboard"),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.person_outline),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const ProfileScreen(),
                     ),
-                  ),
+                  );
+                },
+              ),
+            ],
+          ),
 
-                  const SizedBox(height: 16),
+          body: devices.isEmpty
+              ? const Center(
+                  child: Text("No devices added"),
+                )
+              : SingleChildScrollView(
+                  padding: const EdgeInsets.all(18),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      /// SUMMARY CARDS
+                      Row(
+                        children: [
+                          SummaryCard(
+                            title: "Daily kWh",
+                            value: "${totalDailyUnit.toStringAsFixed(2)} kWh",
+                            icon: Icons.flash_on,
+                            color: Colors.orange,
+                          ),
+                          const SizedBox(width: 14),
+                          SummaryCard(
+                            title: "Daily Cost",
+                            value: "₹${totalDailyCost.toStringAsFixed(2)}",
+                            icon: Icons.currency_rupee,
+                            color: Colors.blue,
+                          ),
+                        ],
+                      ),
 
-                  // ===== DEVICE LIST =====
-                  const Text(
-                    "Today's Device Usage",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
+                      const SizedBox(height: 20),
 
-                  ...devices.map(
-                    (d) => Card(
-                      child: ListTile(
-                        title: Text(d.name),
-                        subtitle: Text(
-                          "${d.dailyUnit.toStringAsFixed(2)} kWh/day",
+                      /// MONTHLY PREDICTION CARD
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [
+                              Color(0xFF2E7D32),
+                              Color(0xFF66BB6A),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(20),
                         ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              "₹${d.dailyCost.toStringAsFixed(2)}",
+                            const Text(
+                              "Predicted Monthly Bill",
+                              style: TextStyle(color: Colors.white70),
                             ),
-                            IconButton(
-                              icon: const Icon(Icons.delete, color: Colors.red),
-                              onPressed: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (_) => AlertDialog(
-                                    title: const Text("Delete Device"),
-                                    content: const Text(
-                                        "Are you sure you want to delete this device?"),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.pop(context),
-                                        child: const Text("Cancel"),
-                                      ),
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.pop(context);
-                                          deleteDevice(d);
-                                        },
-                                        child: const Text("Delete"),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
+                            Text(
+                              "₹${predictedMonthly.toStringAsFixed(0)}",
+                              style: const TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                             ),
                           ],
                         ),
                       ),
-                    ),
+
+                      const SizedBox(height: 30),
+
+                      const Text(
+                        "Today's Device Usage",
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      ...devices.map(
+                        (d) => DeviceTile(
+                          device: d,
+                          onDelete: () async {
+                            await FirebaseFirestore.instance
+                                .collection('users')
+                                .doc(user.uid)
+                                .collection('devices')
+                                .doc(d.id)
+                                .delete();
+                          },
+                        ),
+                      ),
+
+                      const SizedBox(height: 25),
+
+                      /// ANALYSIS BUTTON
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.all(14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const AnalysisScreen(),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.analytics),
+                          label: const Text("View Usage Analysis"),
+                        ),
+                      ),
+                    ],
                   ),
+                ),
 
-                  const SizedBox(height: 16),
-
-                  // ===== TIPS & ALERTS =====
-                  const Text(
-                    "Tips & Alerts",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-
-                  if (totalDailyUnit > 5)
-                    _alertTile(
-                      icon: Icons.warning,
-                      color: Colors.red,
-                      text: "High energy usage detected. Try reducing usage.",
-                    ),
-
-                  _alertTile(
-                    icon: Icons.lightbulb,
-                    color: Colors.green,
-                    text: "Use energy-efficient appliances to reduce cost.",
-                  ),
-                ],
+          /// BOTTOM NAVIGATION
+          bottomNavigationBar: BottomNavigationBar(
+            items: const [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.analytics),
+                label: "Analysis",
               ),
-            ),
-    );
-  }
-
-  // ===== UI HELPERS =====
-  Widget _summaryCard({
-    required String title,
-    required String value,
-    required IconData icon,
-  }) {
-    return Expanded(
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(icon),
-              const SizedBox(height: 6),
-              Text(title),
-              const SizedBox(height: 4),
-              Text(
-                value,
-                style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.add),
+                label: "Add Device",
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.calendar_month),
+                label: "Monthly",
               ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
+            onTap: (index) {
+              if (index == 0) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const AnalysisScreen(),
+                  ),
+                );
+              }
 
-  Widget _alertTile({
-    required IconData icon,
-    required Color color,
-    required String text,
-  }) {
-    return Card(
-      child: ListTile(
-        leading: Icon(icon, color: color),
-        title: Text(text),
-      ),
+              if (index == 1) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const AddDeviceForm(),
+                  ),
+                );
+              }
+
+              if (index == 2) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => MonthlyPredictionScreen(
+                      dailyCost: totalDailyCost,
+                    ),
+                  ),
+                );
+              }
+            },
+          ),
+        );
+      },
     );
   }
 }
