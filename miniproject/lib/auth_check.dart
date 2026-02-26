@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-// ✅ import your existing screens
+// ✅ import your navigation wrapper
+import 'nav_wrapper.dart';
 import 'screens/login_screen.dart';
-import 'screens/dashboard_screen.dart';
 
 class AuthCheck extends StatelessWidget {
   const AuthCheck({super.key});
@@ -20,8 +20,8 @@ class AuthCheck extends StatelessWidget {
         }
 
         if (snapshot.hasData) {
-          // ✅ USER LOGGED IN
-          return const DashboardScreen();
+          // ✅ USER LOGGED IN - Go to Bottom Nav Wrapper
+          return const MainNavigation();
         }
 
         // ✅ USER NOT LOGGED IN
