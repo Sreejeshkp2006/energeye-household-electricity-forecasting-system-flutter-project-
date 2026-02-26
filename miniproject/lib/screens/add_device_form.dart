@@ -180,7 +180,7 @@ class _AddDeviceFormState extends State<AddDeviceForm> {
                         );
 
                         await docRef.set(device.toMap());
-
+                        if (!mounted) return;
                         Navigator.pop(context);
                       }
                     },

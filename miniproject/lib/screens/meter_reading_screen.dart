@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/energy_tips.dart';
 
 class MeterReadingScreen extends StatefulWidget {
   const MeterReadingScreen({super.key});
@@ -204,8 +205,44 @@ class _MeterReadingScreenState extends State<MeterReadingScreen> with SingleTick
                     style: TextStyle(color: Colors.red[900], fontWeight: FontWeight.bold),
                   ),
                   Text(
-                    "Your usage has exceeded 300 units. Consider reducing load.",
+                    "Consumption is high (${_readingController.text} units). Reduce consumption to save costs.",
                     style: TextStyle(color: Colors.red[700], fontSize: 13),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Row(
+                          children: [
+                            Icon(Icons.lightbulb, size: 14, color: Colors.orange),
+                            SizedBox(width: 4),
+                            Text(
+                              "Quick Tip:",
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.orange,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          EnergyTipsService.getRandomTip().description,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: Colors.black87,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),

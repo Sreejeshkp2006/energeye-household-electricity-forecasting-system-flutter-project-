@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class MLService {
+  // Use http://10.0.2.2:8000 for Android Emulator
+  // Use http://localhost:8000 for Windows/Web
   static const String baseUrl = "http://10.0.2.2:8000";
 
   static Future<double> predictBill({
