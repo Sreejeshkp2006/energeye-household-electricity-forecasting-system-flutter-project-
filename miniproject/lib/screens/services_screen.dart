@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'analysis_screen.dart';
 import 'meter_reading_screen.dart';
 import 'add_device_form.dart';
+import 'solar_calculator_screen.dart';
 
 class ServicesScreen extends StatefulWidget {
   const ServicesScreen({super.key});
@@ -21,63 +22,88 @@ class _ServicesScreenState extends State<ServicesScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-                  const SizedBox(height: 30),
-                  const Text(
-                    "Services",
-                    style: TextStyle(
-                      color: Color(0xFF2D3748),
-                      fontSize: 28,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  Text(
-                    "Optimize and analyze your consumption",
-                    style: TextStyle(
-                      color: Colors.blueGrey.shade300,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 40),
-
-                  _buildServiceMainAction(
-                    context,
-                    "Usage Analysis",
-                    "Deep dive into your appliance data with visual charts.",
-                    Icons.bar_chart_rounded,
-                    Colors.teal.shade400,
-                    () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AnalysisScreen())),
-                  ),
-                  
-                  const SizedBox(height: 20),
-
-                  _buildServiceMainAction(
-                    context,
-                    "Bill Calculator",
-                    "Manually calculate your monthly bill based on current units.",
-                    Icons.calculate_rounded,
-                    Colors.orange.shade300,
-                    () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MeterReadingScreen())),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  _buildServiceMainAction(
-                    context,
-                    "Add New Device",
-                    "Track more appliances to refine your energy footprint.",
-                    Icons.add_circle_outline_rounded,
-                    Colors.indigo.shade300,
-                    () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AddDeviceForm())),
-                  ),
-                  
-                  const SizedBox(height: 40),
-                ],
+              const SizedBox(height: 30),
+              const Text(
+                "Services",
+                style: TextStyle(
+                  color: Color(0xFF2D3748),
+                  fontSize: 28,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
-            ),
+              Text(
+                "Optimize and analyze your consumption",
+                style: TextStyle(
+                  color: Colors.blueGrey.shade300,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+
+              const SizedBox(height: 40),
+
+              _buildServiceMainAction(
+                context,
+                "Usage Analysis",
+                "Deep dive into your appliance data with visual charts.",
+                Icons.bar_chart_rounded,
+                Colors.teal.shade400,
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AnalysisScreen()),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              _buildServiceMainAction(
+                context,
+                "Bill Calculator",
+                "Manually calculate your monthly bill based on current units.",
+                Icons.calculate_rounded,
+                Colors.orange.shade300,
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const MeterReadingScreen()),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              _buildServiceMainAction(
+                context,
+                "Add New Device",
+                "Track more appliances to refine your energy footprint.",
+                Icons.add_circle_outline_rounded,
+                Colors.indigo.shade300,
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AddDeviceForm()),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              _buildServiceMainAction(
+                context,
+                "Solar Calculator",
+                "Estimate your rooftop solar capacity and potential savings.",
+                Icons.wb_sunny_outlined,
+                Colors.amber.shade400,
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const SolarCalculatorScreen(),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 40),
+            ],
           ),
-        );
+        ),
+      ),
+    );
   }
 
   Widget _buildServiceMainAction(

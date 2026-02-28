@@ -2,9 +2,6 @@ import 'package:flutter/material.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/services_screen.dart';
 import 'screens/monthly_prediction_screen.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'models/device_model.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});

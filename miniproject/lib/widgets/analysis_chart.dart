@@ -20,10 +20,10 @@ class AnalysisChart extends StatelessWidget {
     return BarChart(
       BarChartData(
         borderData: FlBorderData(show: false),
-        gridData: FlGridData(show: true),
+        gridData: const FlGridData(show: true),
         titlesData: FlTitlesData(
-          leftTitles: AxisTitles(
-            axisNameWidget: const Text(
+          leftTitles: const AxisTitles(
+            axisNameWidget: Text(
               "Daily kWh",
               style: TextStyle(fontWeight: FontWeight.bold),
             ),

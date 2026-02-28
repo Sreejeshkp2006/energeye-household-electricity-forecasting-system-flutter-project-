@@ -103,7 +103,7 @@ class _AddDeviceFormState extends State<AddDeviceForm> {
 
                 /// MONTH DROPDOWN 🔥
                 DropdownButtonFormField<int>(
-                  value: selectedMonth,
+                  initialValue: selectedMonth,
                   decoration: const InputDecoration(
                     labelText: "Select Month",
                     border: OutlineInputBorder(),

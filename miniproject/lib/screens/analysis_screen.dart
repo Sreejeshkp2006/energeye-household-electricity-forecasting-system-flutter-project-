@@ -65,9 +65,9 @@ class AnalysisScreen extends StatelessWidget {
                   child: BarChart(
                     BarChartData(
                       borderData: FlBorderData(show: false),
-                      gridData: FlGridData(show: true),
+                      gridData: const FlGridData(show: true),
                       titlesData: FlTitlesData(
-                        leftTitles: AxisTitles(
+                        leftTitles: const AxisTitles(
                           sideTitles: SideTitles(
                             showTitles: true,
                             reservedSize: 40,
