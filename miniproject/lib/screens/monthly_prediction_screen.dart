@@ -38,9 +38,23 @@ class _MonthlyPredictionScreenState extends State<MonthlyPredictionScreen> {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) throw Exception("User not logged in");
 
+      // Resolve effective ID (UID or Email)
+      String effectiveId = user.uid;
+      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      if (!doc.exists && user.email != null) {
+        final query = await FirebaseFirestore.instance
+            .collection('users')
+            .where('email', isEqualTo: user.email)
+            .limit(1)
+            .get();
+        if (query.docs.isNotEmpty) {
+          effectiveId = query.docs.first.id;
+        }
+      }
+
       final snapshot = await FirebaseFirestore.instance
           .collection('users')
-          .doc(user.uid)
+          .doc(effectiveId)
           .collection('devices')
           .get();
 

@@ -16,11 +16,66 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   int _selectedMonth = DateTime.now().month;
+  String? _resolvedUserId;
+  bool _isLoadingId = true;
 
   final List<String> _monthNames = [
     "January", "February", "March", "April", "May", "June", 
     "July", "August", "September", "October", "November", "December"
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _resolveId();
+  }
+
+  Future<void> _resolveId() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      if (mounted) setState(() => _isLoadingId = false);
+      return;
+    }
+
+    print("DEBUG: Resolving ID for User UID: ${user.uid}, Email: ${user.email}");
+
+    // 1. Try UID
+    final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+    if (doc.exists) {
+      print("DEBUG: Found document by UID");
+      if (mounted) {
+        setState(() {
+          _resolvedUserId = user.uid;
+          _isLoadingId = false;
+        });
+      }
+      return;
+    }
+
+    // 2. Try Email Fallback
+    if (user.email != null) {
+      print("DEBUG: UID doc missing, trying Email fallback...");
+      final query = await FirebaseFirestore.instance
+          .collection('users')
+          .where('email', isEqualTo: user.email)
+          .limit(1)
+          .get();
+      
+      if (query.docs.isNotEmpty) {
+        print("DEBUG: Found document by Email: ${query.docs.first.id}");
+        if (mounted) {
+          setState(() {
+            _resolvedUserId = query.docs.first.id;
+            _isLoadingId = false;
+          });
+        }
+        return;
+      }
+    }
+
+    print("DEBUG: No document found, defaulting to UID");
+    if (mounted) setState(() => _isLoadingId = false);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,10 +87,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
       );
     }
 
+    if (_isLoadingId) {
+      return const Scaffold(
+        backgroundColor: Color(0xFFFBFDFF),
+        body: Center(child: CircularProgressIndicator(color: Color(0xFF4DB6AC))),
+      );
+    }
+
+    final effectiveId = _resolvedUserId ?? user.uid;
+    print("DEBUG: Dashboard using effectiveId: $effectiveId");
+
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection('users')
-          .doc(user.uid)
+          .doc(effectiveId)
           .collection('devices')
           .where('month', isEqualTo: _selectedMonth)
           .snapshots(),
@@ -216,7 +281,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           onDelete: () async {
                             await FirebaseFirestore.instance
                                 .collection('users')
-                                .doc(user.uid)
+                                .doc(effectiveId)
                                 .collection('devices')
                                 .doc(d.id)
                                 .delete();
