@@ -15,7 +15,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFBFDFF),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -23,10 +23,10 @@ class _ServicesScreenState extends State<ServicesScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 30),
-              const Text(
+              Text(
                 "Services",
                 style: TextStyle(
-                  color: Color(0xFF2D3748),
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
                   fontSize: 28,
                   fontWeight: FontWeight.w800,
                 ),
@@ -39,9 +39,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                   fontWeight: FontWeight.w500,
                 ),
               ),
-
               const SizedBox(height: 40),
-
               _buildServiceMainAction(
                 context,
                 "Usage Analysis",
@@ -53,9 +51,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                   MaterialPageRoute(builder: (_) => const AnalysisScreen()),
                 ),
               ),
-
               const SizedBox(height: 20),
-
               _buildServiceMainAction(
                 context,
                 "Bill Calculator",
@@ -67,9 +63,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                   MaterialPageRoute(builder: (_) => const MeterReadingScreen()),
                 ),
               ),
-
               const SizedBox(height: 20),
-
               _buildServiceMainAction(
                 context,
                 "Add New Device",
@@ -81,9 +75,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                   MaterialPageRoute(builder: (_) => const AddDeviceForm()),
                 ),
               ),
-
               const SizedBox(height: 20),
-
               _buildServiceMainAction(
                 context,
                 "Solar Calculator",
@@ -97,7 +89,6 @@ class _ServicesScreenState extends State<ServicesScreen> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 40),
             ],
           ),
@@ -119,12 +110,15 @@ class _ServicesScreenState extends State<ServicesScreen> {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.teal.shade50),
+          border: Border.all(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.transparent
+                  : Colors.teal.shade50),
           boxShadow: [
             BoxShadow(
-              color: Colors.teal.withValues(alpha: 0.02),
+              color: Colors.teal.withOpacity(0.02),
               blurRadius: 15,
               offset: const Offset(0, 6),
             ),
@@ -147,10 +141,10 @@ class _ServicesScreenState extends State<ServicesScreen> {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF2D3748),
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                     ),
                   ),
                   const SizedBox(height: 4),

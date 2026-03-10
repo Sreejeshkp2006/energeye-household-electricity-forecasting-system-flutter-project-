@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'edit_profile_screen.dart';
+import '../app_theme.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -16,9 +17,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text("Delete Account?"),
-        content: const Text("This action is permanent and will remove all your data. Are you sure?"),
+        content: const Text(
+            "This action is permanent and will remove all your data. Are you sure?"),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("CANCEL")),
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text("CANCEL")),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
@@ -34,10 +38,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
         if (user != null) {
           final uid = user.uid;
           // Delete from Firestore
-          await FirebaseFirestore.instance.collection('users').doc(uid).delete();
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(uid)
+              .delete();
           // Delete from Auth
           await user.delete();
-          
+
           if (context.mounted) {
             Navigator.of(context).popUntil((route) => route.isFirst);
           }
@@ -46,7 +53,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         if (context.mounted) {
           String message = e.toString();
           if (message.contains('requires-recent-login')) {
-            message = "For security, please logout and log in again before deleting your account.";
+            message =
+                "For security, please logout and log in again before deleting your account.";
           }
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(message), backgroundColor: Colors.redAccent),
@@ -58,7 +66,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<Map<String, dynamic>?> _getUserData(String uid, String? email) async {
     // 1. Try fetching by UID (Standard)
-    final doc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+    final doc =
+        await FirebaseFirestore.instance.collection('users').doc(uid).get();
     if (doc.exists) {
       return doc.data() as Map<String, dynamic>;
     }
@@ -70,7 +79,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           .where('email', isEqualTo: email)
           .limit(1)
           .get();
-      
+
       if (query.docs.isNotEmpty) {
         return query.docs.first.data();
       }
@@ -85,40 +94,70 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final uid = user.uid;
     final email = user.email;
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Profile"),
-        backgroundColor: const Color(0xFF0F2027),
-        foregroundColor: Colors.white,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+        foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
+        actions: [
+          Row(
+            children: [
+              Icon(isDark ? Icons.dark_mode : Icons.light_mode,
+                  color: isDark ? Colors.white : Colors.black87),
+              Switch(
+                value: isDark,
+                activeColor: Colors.cyanAccent,
+                onChanged: (value) {
+                  AppTheme.themeNotifier.value =
+                      value ? ThemeMode.dark : ThemeMode.light;
+                },
+              ),
+            ],
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF0F2027),
-              Color(0xFF203A43),
-              Color(0xFF2C5364),
-            ],
+            colors: isDark
+                ? const [
+                    Color(0xFF0F2027),
+                    Color(0xFF203A43),
+                    Color(0xFF2C5364),
+                  ]
+                : const [
+                    Color(0xFFFBFDFF),
+                    Color(0xFFE0F7FA),
+                    Color(0xFFB2EBF2),
+                  ],
           ),
         ),
         child: FutureBuilder<Map<String, dynamic>?>(
           future: _getUserData(uid, email),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator(color: Colors.cyanAccent));
+              return const Center(
+                  child: CircularProgressIndicator(color: Colors.cyanAccent));
             }
 
             if (snapshot.hasError) {
-              return const Center(child: Text("Something went wrong", style: TextStyle(color: Colors.white)));
+              return const Center(
+                  child: Text("Something went wrong",
+                      style: TextStyle(color: Colors.white)));
             }
 
             final data = snapshot.data;
             if (data == null) {
-              return const Center(child: Text("Profile data not found", style: TextStyle(color: Colors.white)));
+              return const Center(
+                  child: Text("Profile data not found",
+                      style: TextStyle(color: Colors.white)));
             }
 
             return SingleChildScrollView(
@@ -131,35 +170,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.5), width: 2),
+                      border: Border.all(
+                          color: Colors.cyanAccent.withValues(alpha: 0.5),
+                          width: 2),
                     ),
-                    child: const Icon(Icons.person, size: 80, color: Colors.cyanAccent),
+                    child: const Icon(Icons.person,
+                        size: 80, color: Colors.cyanAccent),
                   ),
                   const SizedBox(height: 30),
-                  
+
                   // Profile Info Card
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                      border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.1)),
                     ),
                     child: Column(
                       children: [
-                        _buildInfoRow(Icons.person_outline, "Name", data['name'] ?? 'N/A'),
+                        _buildInfoRow(Icons.person_outline, "Name",
+                            data['name'] ?? 'N/A'),
                         const Divider(color: Colors.white12),
-                        _buildInfoRow(Icons.email_outlined, "Email", data['email'] ?? user.email ?? 'N/A'),
+                        _buildInfoRow(Icons.email_outlined, "Email",
+                            data['email'] ?? user.email ?? 'N/A'),
                         const Divider(color: Colors.white12),
-                        _buildInfoRow(Icons.assignment_ind_outlined, "Consumer No", data['consumerNo'] ?? 'N/A'),
+                        _buildInfoRow(Icons.assignment_ind_outlined,
+                            "Consumer No", data['consumerNo'] ?? 'N/A'),
                         const Divider(color: Colors.white12),
-                        _buildInfoRow(Icons.phone_android_outlined, "Mobile", data['mobile'] ?? 'N/A'),
+                        _buildInfoRow(Icons.phone_android_outlined, "Mobile",
+                            data['mobile'] ?? 'N/A'),
                       ],
                     ),
                   ),
-                  
+
                   const SizedBox(height: 40),
-                  
+
                   // Actions
                   _buildActionButton(
                     "Edit Profile",
@@ -168,7 +215,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     onTap: () async {
                       final updated = await Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => EditProfileScreen(userData: data)),
+                        MaterialPageRoute(
+                            builder: (_) => EditProfileScreen(userData: data)),
                       );
                       if (updated == true) {
                         setState(() {}); // Refresh data
@@ -183,10 +231,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     onTap: () async {
                       final email = user.email;
                       if (email != null) {
-                        await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+                        await FirebaseAuth.instance
+                            .sendPasswordResetEmail(email: email);
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Reset email sent!"), backgroundColor: Colors.green),
+                            const SnackBar(
+                                content: Text("Reset email sent!"),
+                                backgroundColor: Colors.green),
                           );
                         }
                       }
@@ -207,8 +258,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(height: 30),
                   TextButton.icon(
                     onPressed: () => _deleteAccount(context),
-                    icon: const Icon(Icons.delete_forever, color: Colors.redAccent),
-                    label: const Text("Delete Account", style: TextStyle(color: Colors.redAccent)),
+                    icon: const Icon(Icons.delete_forever,
+                        color: Colors.redAccent),
+                    label: const Text("Delete Account",
+                        style: TextStyle(color: Colors.redAccent)),
                   ),
                 ],
               ),
@@ -220,18 +273,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildInfoRow(IconData icon, String label, String value) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          Icon(icon, color: Colors.cyanAccent, size: 24),
+          Icon(icon,
+              color: isDark ? Colors.cyanAccent : Colors.teal.shade700,
+              size: 24),
           const SizedBox(width: 15),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 12)),
-                Text(value, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis),
+                Text(label,
+                    style: TextStyle(
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.5)
+                            : Colors.black54,
+                        fontSize: 12)),
+                Text(value,
+                    style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black87,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500),
+                    overflow: TextOverflow.ellipsis),
               ],
             ),
           ),
@@ -240,17 +306,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildActionButton(String label, IconData icon, Color color, {required VoidCallback onTap}) {
+  Widget _buildActionButton(String label, IconData icon, Color color,
+      {required VoidCallback onTap}) {
     return SizedBox(
       width: double.infinity,
       height: 55,
       child: ElevatedButton.icon(
         onPressed: onTap,
         icon: Icon(icon, color: Colors.black87),
-        label: Text(label, style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
+        label: Text(label,
+            style: const TextStyle(
+                color: Colors.black87, fontWeight: FontWeight.bold)),
         style: ElevatedButton.styleFrom(
           backgroundColor: color,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         ),
       ),
     );

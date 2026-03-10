@@ -34,7 +34,8 @@ class _MainNavigationState extends State<MainNavigation> {
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).bottomNavigationBarTheme.backgroundColor ??
+              Theme.of(context).cardColor,
           boxShadow: [
             BoxShadow(
               color: Colors.teal.withValues(alpha: 0.08),
@@ -66,9 +67,16 @@ class _MainNavigationState extends State<MainNavigation> {
               elevation: 0,
               backgroundColor: Colors.transparent,
               selectedItemColor: Colors.teal.shade400,
-              unselectedItemColor: Colors.blueGrey.shade200,
-              selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
-              unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 12),
+              unselectedItemColor: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.color
+                      ?.withValues(alpha: 0.5) ??
+                  Colors.blueGrey.shade200,
+              selectedLabelStyle:
+                  const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+              unselectedLabelStyle:
+                  const TextStyle(fontWeight: FontWeight.w500, fontSize: 12),
               type: BottomNavigationBarType.fixed,
             ),
           ),

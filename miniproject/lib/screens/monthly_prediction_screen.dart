@@ -21,8 +21,18 @@ class _MonthlyPredictionScreenState extends State<MonthlyPredictionScreen> {
   String? error;
 
   final List<String> _monthNames = [
-    "January", "February", "March", "April", "May", "June", 
-    "July", "August", "September", "October", "November", "December"
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December"
   ];
 
   @override
@@ -33,14 +43,17 @@ class _MonthlyPredictionScreenState extends State<MonthlyPredictionScreen> {
 
   Future<void> _fetchAndPredict() async {
     setState(() => isLoading = true);
-    
+
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) throw Exception("User not logged in");
 
       // Resolve effective ID (UID or Email)
       String effectiveId = user.uid;
-      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
       if (!doc.exists && user.email != null) {
         final query = await FirebaseFirestore.instance
             .collection('users')
@@ -74,7 +87,8 @@ class _MonthlyPredictionScreenState extends State<MonthlyPredictionScreen> {
 
       for (var month in grouped.keys) {
         final monthDevices = grouped[month]!;
-        final totalUnits = monthDevices.fold(0.0, (sum, d) => sum + d.dailyUnit);
+        final totalUnits =
+            monthDevices.fold(0.0, (sum, d) => sum + d.dailyUnit);
         final rate = monthDevices.first.rate;
 
         newMonthlyUnits[month] = totalUnits;
@@ -113,10 +127,11 @@ class _MonthlyPredictionScreenState extends State<MonthlyPredictionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFBFDFF),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: isLoading
-            ? const Center(child: CircularProgressIndicator(color: Color(0xFF4DB6AC)))
+            ? const Center(
+                child: CircularProgressIndicator(color: Color(0xFF4DB6AC)))
             : error != null
                 ? _buildErrorState()
                 : monthlyUnits.isEmpty
@@ -127,7 +142,8 @@ class _MonthlyPredictionScreenState extends State<MonthlyPredictionScreen> {
   }
 
   Widget _buildPredictionList() {
-    final sortedMonths = monthlyUnits.keys.toList()..sort((a, b) => b.compareTo(a));
+    final sortedMonths = monthlyUnits.keys.toList()
+      ..sort((a, b) => b.compareTo(a));
 
     return RefreshIndicator(
       onRefresh: _fetchAndPredict,
@@ -141,7 +157,6 @@ class _MonthlyPredictionScreenState extends State<MonthlyPredictionScreen> {
             const SizedBox(height: 20),
             _buildHeader(),
             const SizedBox(height: 32),
-            
             ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -151,11 +166,10 @@ class _MonthlyPredictionScreenState extends State<MonthlyPredictionScreen> {
                 final month = sortedMonths[index];
                 final units = monthlyUnits[month]!;
                 final pred = predictions[month];
-                
+
                 return _buildMonthCard(month, units, pred);
               },
             ),
-
             const SizedBox(height: 40),
             const TipsSection(),
             const SizedBox(height: 40),
@@ -167,20 +181,23 @@ class _MonthlyPredictionScreenState extends State<MonthlyPredictionScreen> {
 
   Widget _buildMonthCard(int month, double units, double? prediction) {
     final bool isHigh = (prediction ?? 0) > 2000;
-    
+
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.teal.withValues(alpha: 0.04),
+            color: Colors.teal.withOpacity(0.04),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
         ],
-        border: Border.all(color: Colors.teal.shade50),
+        border: Border.all(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.transparent
+                : Colors.teal.shade50),
       ),
       child: Column(
         children: [
@@ -216,18 +233,23 @@ class _MonthlyPredictionScreenState extends State<MonthlyPredictionScreen> {
                     ),
                     if (isHigh)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
                           color: Colors.orange.shade50,
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.warning_amber_rounded, color: Colors.orange.shade400, size: 14),
+                            Icon(Icons.warning_amber_rounded,
+                                color: Colors.orange.shade400, size: 14),
                             const SizedBox(width: 4),
                             Text(
                               "High",
-                              style: TextStyle(color: Colors.orange.shade700, fontSize: 11, fontWeight: FontWeight.w700),
+                              style: TextStyle(
+                                  color: Colors.orange.shade700,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700),
                             ),
                           ],
                         ),
@@ -236,15 +258,17 @@ class _MonthlyPredictionScreenState extends State<MonthlyPredictionScreen> {
                 ),
                 const SizedBox(height: 24),
                 prediction == null
-                    ? CircularProgressIndicator(color: Colors.teal.shade100, strokeWidth: 2)
+                    ? CircularProgressIndicator(
+                        color: Colors.teal.shade100, strokeWidth: 2)
                     : Column(
                         children: [
                           Text(
                             "₹${prediction.toStringAsFixed(2)}",
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 34,
                               fontWeight: FontWeight.w800,
-                              color: Color(0xFF2D3748),
+                              color:
+                                  Theme.of(context).textTheme.bodyLarge?.color,
                               letterSpacing: -0.5,
                             ),
                           ),
@@ -268,11 +292,15 @@ class _MonthlyPredictionScreenState extends State<MonthlyPredictionScreen> {
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
               decoration: BoxDecoration(
                 color: Colors.red.shade50.withValues(alpha: 0.5),
-                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
+                borderRadius:
+                    const BorderRadius.vertical(bottom: Radius.circular(24)),
               ),
               child: Text(
                 "Tip: Reduce heavy appliance usage to save.",
-                style: TextStyle(color: Colors.red.shade800, fontSize: 11, fontWeight: FontWeight.w600),
+                style: TextStyle(
+                    color: Colors.red.shade800,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -294,10 +322,10 @@ class _MonthlyPredictionScreenState extends State<MonthlyPredictionScreen> {
             letterSpacing: 1.5,
           ),
         ),
-        const Text(
+        Text(
           "Monthly Predictions",
           style: TextStyle(
-            color: Color(0xFF2D3748),
+            color: Theme.of(context).textTheme.bodyLarge?.color,
             fontSize: 24,
             fontWeight: FontWeight.w700,
           ),
@@ -319,12 +347,16 @@ class _MonthlyPredictionScreenState extends State<MonthlyPredictionScreen> {
                 color: Colors.red.shade50,
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.cloud_off_rounded, color: Colors.red.shade300, size: 40),
+              child: Icon(Icons.cloud_off_rounded,
+                  color: Colors.red.shade300, size: 40),
             ),
             const SizedBox(height: 24),
-            const Text(
+            Text(
               "Something went wrong",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Color(0xFF2D3748)),
+              style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: Theme.of(context).textTheme.bodyLarge?.color),
             ),
             const SizedBox(height: 12),
             Text(
@@ -338,11 +370,14 @@ class _MonthlyPredictionScreenState extends State<MonthlyPredictionScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.teal.shade400,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
                 elevation: 0,
               ),
-              child: const Text("Retry", style: TextStyle(fontWeight: FontWeight.w700)),
+              child: const Text("Retry",
+                  style: TextStyle(fontWeight: FontWeight.w700)),
             ),
           ],
         ),
@@ -368,18 +403,23 @@ class _MonthlyPredictionScreenState extends State<MonthlyPredictionScreen> {
                     color: Colors.teal.shade50.withValues(alpha: 0.3),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(Icons.auto_graph_rounded, size: 48, color: Colors.teal.shade200),
+                  child: Icon(Icons.auto_graph_rounded,
+                      size: 48, color: Colors.teal.shade200),
                 ),
                 const SizedBox(height: 24),
-                const Text(
+                Text(
                   "No Data for Prediction",
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Color(0xFF2D3748)),
+                  style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: Theme.of(context).textTheme.bodyLarge?.color),
                 ),
                 const SizedBox(height: 12),
                 Text(
                   "Add your appliances in the Services tab to see your projected bills for each month.",
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.blueGrey.shade400, height: 1.5),
+                  style:
+                      TextStyle(color: Colors.blueGrey.shade400, height: 1.5),
                 ),
               ],
             ),
@@ -389,4 +429,3 @@ class _MonthlyPredictionScreenState extends State<MonthlyPredictionScreen> {
     );
   }
 }
-
