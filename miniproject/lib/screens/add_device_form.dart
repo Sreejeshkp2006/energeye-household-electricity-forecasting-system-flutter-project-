@@ -135,7 +135,7 @@ class _AddDeviceFormState extends State<AddDeviceForm> {
                 ),
                 const SizedBox(height: 15),
                 DropdownButtonFormField<int>(
-                  value: selectedMonth,
+                  initialValue: selectedMonth,
                   decoration: const InputDecoration(
                     labelText: "Select Month",
                     border: OutlineInputBorder(),
