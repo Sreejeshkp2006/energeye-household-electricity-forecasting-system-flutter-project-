@@ -108,7 +108,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   color: isDark ? Colors.white : Colors.black87),
               Switch(
                 value: isDark,
-                activeColor: Colors.cyanAccent,
+                activeThumbColor: Colors.cyanAccent,
                 onChanged: (value) {
                   AppTheme.themeNotifier.value =
                       value ? ThemeMode.dark : ThemeMode.light;

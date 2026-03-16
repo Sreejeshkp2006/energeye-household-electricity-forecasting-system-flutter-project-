@@ -23,7 +23,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String? _consumerNo;
   final Set<int> _alertedMonths = {};
 
-  final List<String> _monthNames = [
+  // Static constant to avoid recreation on every build
+  static const List<String> _monthNames = [
     "January",
     "February",
     "March",
@@ -54,49 +55,61 @@ class _DashboardScreenState extends State<DashboardScreen> {
     print(
         "DEBUG: Resolving ID for User UID: ${user.uid}, Email: ${user.email}");
 
-    // 1. Try UID
-    final doc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .get();
-    if (doc.exists) {
-      print("DEBUG: Found document by UID");
-      if (mounted) {
-        setState(() {
-          _resolvedUserId = user.uid;
-          _userName = doc.data()?['name'] as String?;
-          _consumerNo = doc.data()?['consumerNo'] as String?;
-          _isLoadingId = false;
-        });
-      }
-      return;
-    }
-
-    // 2. Try Email Fallback
-    if (user.email != null) {
-      print("DEBUG: UID doc missing, trying Email fallback...");
-      final query = await FirebaseFirestore.instance
+    try {
+      // 1. Try UID (primary method)
+      final doc = await FirebaseFirestore.instance
           .collection('users')
-          .where('email', isEqualTo: user.email)
-          .limit(1)
+          .doc(user.uid)
           .get();
-
-      if (query.docs.isNotEmpty) {
-        print("DEBUG: Found document by Email: ${query.docs.first.id}");
+      
+      if (doc.exists) {
+        print("DEBUG: Found document by UID");
         if (mounted) {
           setState(() {
-            _resolvedUserId = query.docs.first.id;
-            _userName = query.docs.first.data()['name'] as String?;
-            _consumerNo = query.docs.first.data()['consumerNo'] as String?;
+            _resolvedUserId = user.uid;
+            _userName = doc.data()?['name'] as String?;
+            _consumerNo = doc.data()?['consumerNo'] as String?;
             _isLoadingId = false;
           });
         }
         return;
       }
-    }
 
-    print("DEBUG: No document found, defaulting to UID");
-    if (mounted) setState(() => _isLoadingId = false);
+      // 2. Try Email Fallback (only if UID doc doesn't exist)
+      if (user.email != null) {
+        print("DEBUG: UID doc missing, trying Email fallback...");
+        final query = await FirebaseFirestore.instance
+            .collection('users')
+            .where('email', isEqualTo: user.email)
+            .limit(1)
+            .get();
+
+        if (query.docs.isNotEmpty) {
+          print("DEBUG: Found document by Email: ${query.docs.first.id}");
+          if (mounted) {
+            setState(() {
+              _resolvedUserId = query.docs.first.id;
+              _userName = query.docs.first.data()['name'] as String?;
+              _consumerNo = query.docs.first.data()['consumerNo'] as String?;
+              _isLoadingId = false;
+            });
+          }
+          return;
+        }
+      }
+
+      // 3. Default to UID if no document found
+      print("DEBUG: No document found, defaulting to UID");
+      if (mounted) {
+        setState(() {
+          _resolvedUserId = user.uid;
+          _isLoadingId = false;
+        });
+      }
+    } catch (e) {
+      print("DEBUG: Error resolving ID: $e");
+      if (mounted) setState(() => _isLoadingId = false);
+    }
   }
 
   Future<void> _triggerAlert(

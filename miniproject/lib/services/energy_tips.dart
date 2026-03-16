@@ -1,3 +1,5 @@
+import 'dart:math';
+
 class EnergyTip {
   final String title;
   final String description;
@@ -44,10 +46,14 @@ class EnergyTipsService {
     ),
   ];
 
+  // Cache for random instance to avoid recreation
+  static final Random _random = Random();
+
   static List<EnergyTip> getAllTips() => List.unmodifiable(_tips);
 
   static EnergyTip getRandomTip() {
-    _tips.shuffle();
-    return _tips.first;
+    // Use random index instead of shuffle() to avoid list manipulation overhead
+    final randomIndex = _random.nextInt(_tips.length);
+    return _tips[randomIndex];
   }
 }

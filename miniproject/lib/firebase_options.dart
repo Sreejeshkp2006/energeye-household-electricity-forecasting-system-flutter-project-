@@ -83,4 +83,5 @@ class DefaultFirebaseOptions {
     authDomain: 'energeye-54685.firebaseapp.com',
     storageBucket: 'energeye-54685.firebasestorage.app',
   );
+
 }

@@ -190,7 +190,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             DeviceModel? peakDevice;
             for (var d in devices) {
               totalUsage += d.dailyUnit;
-              if (peakDevice == null || d.dailyUnit > peakDevice!.dailyUnit) {
+              if (peakDevice == null || d.dailyUnit > peakDevice.dailyUnit) {
                 peakDevice = d;
               }
             }

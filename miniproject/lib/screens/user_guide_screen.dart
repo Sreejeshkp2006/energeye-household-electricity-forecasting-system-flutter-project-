@@ -180,7 +180,7 @@ class UserGuideScreen extends StatelessWidget {
                   ),
                 ],
               );
-            }).toList(),
+            }),
           ],
         ),
       ),
