@@ -58,20 +58,38 @@ class _MeterReadingScreenState extends State<MeterReadingScreen> with SingleTick
     }
 
     setState(() {
-      // Simplified KSEB Domestic (LT-1A) 2-month logic for demo to match user's screenshot
-      // Approx: 150 units -> 687 total
+      // KSEB Domestic (LT-1A) 6-tier slab rates
+      // 0–50 units: ₹3.25/unit
+      // 51–100 units: ₹4.05/unit
+      // 101–150 units: ₹5.10/unit
+      // 151–200 units: ₹6.95/unit
+      // 201–250 units: ₹8.20/unit
+      // Above 250 units: ₹9.50/unit (assumed rate for higher consumption)
       
-      // EC Calculation (Slab-based)
-      if (units <= 100) {
-        _ec = units * 3.15;
+      // EC Calculation (6-tier Slab-based)
+      _ec = 0;
+      if (units <= 50) {
+        _ec = units * 3.25;
+      } else if (units <= 100) {
+        _ec = (50 * 3.25) + ((units - 50) * 4.05);
+      } else if (units <= 150) {
+        _ec = (50 * 3.25) + (50 * 4.05) + ((units - 100) * 5.10);
       } else if (units <= 200) {
-        _ec = (100 * 3.15) + (units - 100) * 4.645; // Adjusted to match screenshot ~547
+        _ec = (50 * 3.25) + (50 * 4.05) + (50 * 5.10) + ((units - 150) * 6.95);
+      } else if (units <= 250) {
+        _ec = (50 * 3.25) + (50 * 4.05) + (50 * 5.10) + (50 * 6.95) + ((units - 200) * 8.20);
       } else {
-        _ec = (100 * 3.15) + (100 * 4.645) + (units - 200) * 6.5;
+        _ec = (50 * 3.25) + (50 * 4.05) + (50 * 5.10) + (50 * 6.95) + (50 * 8.20) + ((units - 250) * 9.50);
       }
 
-      _duty = _ec * 0.10; // Exactly 10% from screenshot
-      _fuelSurcharge = (units * 0.04); // Approx
+      _duty = _ec * 0.10; // 10% duty
+      _fuelSurcharge = (units * 0.04); // Fuel surcharge
+      
+      // Fixed Charge based on phase and cycle
+      _fixedCharge = _phase == "Single phase" ? 170 : 340;
+      if (_billingCycle == 1) _fixedCharge /= 2;
+
+      _meterRent = 12;
       
       // Fixed Charge based on phase and cycle
       _fixedCharge = _phase == "Single phase" ? 170 : 340;

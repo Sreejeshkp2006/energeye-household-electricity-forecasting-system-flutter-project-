@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <!-- Background Circle -->
+  <circle cx="96" cy="96" r="96" fill="#FBFDFF"/>
+  
+  <!-- Outer Teal Ring -->
+  <circle cx="96" cy="96" r="88" fill="none" stroke="#009688" stroke-width="3"/>
+  
+  <!-- Energy/Lightning Bolt Symbol in Teal -->
+  <g fill="#009688">
+    <!-- Simplified lightning bolt shape -->
+    <path d="M 96 30 L 110 70 L 80 70 L 120 140 L 85 85 L 105 85 Z" stroke="#009688" stroke-width="1.5"/>
+  </g>
+  
+  <!-- Inner accent circle -->
+  <circle cx="96" cy="96" r="75" fill="none" stroke="#00BCD4" stroke-width="1.5" opacity="0.6"/>
+</svg>
